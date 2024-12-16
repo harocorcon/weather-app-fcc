@@ -5,6 +5,8 @@ import axios from "axios";
 import { format, parseISO } from "date-fns";
 import Container from "./components/Container";
 import { convertKelvinToCelcius } from "@/utils/convertKelvinToCelcius";
+import WeatherIcon from "./components/WeatherIcon";
+import { getDayOrNightIcon } from "@/utils/getDayOrNightIcon";
 
 export default function Home() {
   const apiKey = process.env.NEXT_PUBLIC_WEATHER_KEY;
@@ -63,8 +65,9 @@ export default function Home() {
                     <p className="whitespace-nowrap">
                       {format(parseISO(d.dt_txt), "h:mm a")}
                     </p>
+                    {/* <WeatherIcon iconname={d.weather[0].icon} /> */}
+                    <WeatherIcon iconname={getDayOrNightIcon(d.weather[0].icon, d.dt_txt)} />
                     <p>{convertKelvinToCelcius(d?.main.temp ?? 0)}°</p>
-
                 </div>
                 )}
               </div>
