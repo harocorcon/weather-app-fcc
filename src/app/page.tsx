@@ -11,20 +11,30 @@ import WeatherDetails from "./components/WeatherDetails";
 import { metersToKm } from "@/utils/metersToKm";
 import { convertWindSpeed } from "@/utils/windSpeed";
 import ForecastWeatherDetail from "./components/ForecastWeatherDetail";
+import { useAtom } from "jotai";
+import { loadingCityAtom, placeAtom } from "./atom";
+import { useEffect } from "react";
 
 export default function Home() {
+  const [place, setPlace] = useAtom(placeAtom);
+  const [loadingCity, ] = useAtom(loadingCityAtom);
+  
   const apiKey = process.env.NEXT_PUBLIC_WEATHER_KEY;
-  console.log("api ", apiKey);
-  const { isLoading, error, data } = useQuery<WeatherData>(
+  const { isLoading, error, data, refetch } = useQuery<WeatherData>(
     // {queryKey: ['repoData'], queryFn: async () => {
     "repoData", async() => {
       const { data } = await axios.get(
-      `https://api.openweathermap.org/data/2.5/forecast?q=hindang&appid=${apiKey}&cnt=56`);
+      `https://api.openweathermap.org/data/2.5/forecast?q=${place}&appid=${apiKey}&cnt=56`);
       return data;
     });
     
   const firstData = data?.list[0];
   console.log("data: ", data?.city.country);
+
+  useEffect(() => {
+    refetch();
+  }, [place, refetch]);
+
   if (isLoading) 
     return (
     <div className="flex items-center min-h-screen justify-center">
@@ -48,9 +58,10 @@ export default function Home() {
 
   return (
     <div className="flex flex-col gap-4 bg-gray-100 min-h-screen">
-      <Navbar/>
+      <Navbar location={data?.city.name}/>
       <main className="px-3 max-w-7xl mx-auto flex flex-col gap-9 w-full pb-10 pt-4">
-        {/* data today */}
+        {loadingCity? <WeatherSkeleton/>:(
+        <>{/* data today */}
         <section className="space-y-4">
           <div className="space-y-2"> 
             <h2 className="flex gap-1 text-2xl items-end">
@@ -133,11 +144,48 @@ export default function Home() {
             />
           ))}
           
-          />
+          
         </section>
+        </>)}
       </main>
     </div>
   );
+}
+
+function WeatherSkeleton() {
+  return (
+    <section className="space-y-8">
+      <div className="space-y-2 animate-pulse">
+        <div className="flex gap-1 text-2xl items-end">
+          <div className="h-6 w-24 bg-gray-300 rounded"></div>
+          <div className="h-6 w-24 bg-gray-300 rounded"></div>
+        </div>
+
+        <div className="grid grid-cols-2 mdLgrid-cols-4 gap-4">
+          {[1,2,3,4].map((index) => (
+            <div key={index} className="flex flex-col items-center space-y-2">
+              <div className="h-6 w-16 bg-gray-300 rounded"></div>
+              <div className="h-6 w-16 bg-gray-300 rounded-full"></div>
+              <div className="h-6 w-16 bg-gray-300 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* /* 7 day forecast */}
+      <div className="flex flex-col gap-4 animate-pulse">
+        <p className="text-2xl h-8 w-36 bg-gray-300 rounded"></p>
+        {[1,2,3,4,5,6,7].map((index) => (
+            <div key={index} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="h-8 w-28 bg-gray-300 rounded"></div>
+              <div className="h-10 w-10 bg-gray-300 rounded-full"></div>
+              <div className="h-8 w-28 bg-gray-300 rounded"></div>
+              <div className="h-8 w-28 bg-gray-300 rounded"></div>
+            </div>
+          ))}
+      </div>
+    </section>
+  )
 }
 
 // TypeScript Type for Weather Data
